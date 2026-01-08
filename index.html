@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Maze</title>
+
+    <link rel="stylesheet" type="text/css" href="style.css" />
+
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+  </head>
+
+  <body>
+    <div id="title-Container">Maze Generator and Solver</div>  
+    <div class="main-body">
+    <div class="button-container">
+      <div id="gen-timer-box" class="timer-box">Generator Time: <span id="gen-timer">0.000 s</span></div>
+      <button class="recursive-btn">Recursive Backtracking</button>
+      <button class="kruskal-btn">Randomized Kruskal</button>
+      <button class="prim-btn">Randomized Prim</button>
+      <button class="eller-btn">Eller's Algorithm</button>
+      <button class="wilson-btn">Wilson Algorithm</button>
+
+    </div>
+  
+    <div id="canvas-container"></div>
+    <div class ="solver-container">
+            <div id="solve-timer-box" class="timer-box">Solver Time: <span id="solve-timer">0.000 s</span></div>
+            <button class="recursive-solver-btn">Recursive DFS Solver</button>
+            <button class="wall-follower-btn">Wall Follower Solver</button>
+          <button class="dijkstra-btn" >Dijkstra </button>
+    </div>
+    </div>
+    <div class="metrics-container">
+      <button class="export-metrics-btn" onclick="metricsData.exportForReport()">📊 Export Metrics</button>
+      <button class="clear-metrics-btn" onclick="metricsData.clear()">🗑️ Clear Metrics</button>
+      <button class="benchmark-btn" onclick="benchmarkSuite.run()" style="background-color: #ff5722; color: white;">🚀 Run Benchmark Suite</button>
+      <label style="color: white; margin-left: 10px;">
+        <input type="checkbox" id="fast-mode-check" onchange="mazeSpeed = this.checked ? 0 : 50"> Fast Mode
+      </label>
+    </div>
+      <script src="timer/timer.js"></script>
+      <script src="maze generators/recursiveBacktracking.js"></script>
+      <script src="maze generators/randomizedKruskal.js"></script>
+      <script src="maze generators/randomizedPrim.js"></script>
+      <script src="maze generators/eller.js"></script>
+      <script src="maze solvers/recursiveDFS.js"></script>
+      <script src="maze solvers/wallFollower.js"></script>
+      <script src="maze solvers/dijkstra.js"></script>
+      <script src="maze generators/wilson.js"></script>
+      <script src="grid.js"></script>
+      <script src="benchmark.js"></script>
+    </div>
+  </body>
+</html>
