@@ -1,5 +1,6 @@
 const recursiveBacktracking = () => {
   console.log("Recursive Backtracking Algorithm");
+  metricsData.startTracking("Recursive Backtracking");
   timerState.startGen();
   mazeState.generated = false;
   const naming = document.querySelector("#title-Container");

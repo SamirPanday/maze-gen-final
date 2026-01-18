@@ -1,5 +1,6 @@
 const wilson = () => {
   console.log("Wilson's Algorithm started");
+  metricsData.startTracking("Wilson's Algorithm");
   timerState.startGen();
   mazeState.generated = false;
   const naming = document.querySelector("#title-Container");

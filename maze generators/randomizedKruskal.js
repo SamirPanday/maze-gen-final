@@ -1,5 +1,6 @@
 const randomizedKruskal = () => {
   console.log("Randomized Kruskal's Algorithm");
+  metricsData.startTracking("Randomized Kruskal");
   timerState.startGen();
   mazeState.generated = false;
   const naming = document.querySelector("#title-Container");

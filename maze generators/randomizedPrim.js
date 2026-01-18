@@ -1,5 +1,6 @@
 const randomizedPrim = () => {
   console.log("Randomized Prim's Algorithm");
+  metricsData.startTracking("Randomized Prim");
   timerState.startGen();
 
   mazeState.generated = false;

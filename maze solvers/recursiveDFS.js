@@ -8,6 +8,8 @@ const recursiveDFS = (start = grid[0], end = grid[grid.length - 1]) => {
   metricsData.startTracking("Recursive DFS");
   timerState.startSolve();
   solveState.solving = true;
+  solveState.started = true; // Signal that solver has started
+  let backtrackCount = 0; // Track backtracks for metrics
   console.log(solveState.solving);
   currentCell = start;
   let nextCell;
@@ -67,6 +69,7 @@ const recursiveDFS = (start = grid[0], end = grid[grid.length - 1]) => {
       const solveTime = (performance.now() - timerState.solveStart) / 1000;
       metricsData.recordResult("solver", {
         time: solveTime,
+        backtracks: backtrackCount,
         ...metrics,
       });
 
@@ -82,6 +85,7 @@ const recursiveDFS = (start = grid[0], end = grid[grid.length - 1]) => {
     } else {
       if (path.length > 0) {
         currentCell = path.pop();
+        backtrackCount++; // Count each backtrack
       } else {
         console.log("No path found!");
         clearInterval(solverInterval);
@@ -92,6 +96,7 @@ const recursiveDFS = (start = grid[0], end = grid[grid.length - 1]) => {
         const solveTime = (performance.now() - timerState.solveStart) / 1000;
         metricsData.recordResult("solver", {
           time: solveTime,
+          backtracks: backtrackCount,
           ...metrics,
           pathFound: false,
         });

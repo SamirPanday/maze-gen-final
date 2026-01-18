@@ -8,6 +8,8 @@ const wallFollower = (start = grid[0], end = grid[grid.length - 1]) => {
   metricsData.startTracking("Wall Follower");
   timerState.startSolve();
   solveState.solving = true;
+  solveState.started = true; // Signal that solver has started
+  let backtrackCount = 0; // Track backtracks for metrics
   // console.log("Starting Wall Follower Solver from", start, "to", end);
 
   let currentCell = start;
@@ -31,6 +33,7 @@ const wallFollower = (start = grid[0], end = grid[grid.length - 1]) => {
       const solveTime = (performance.now() - timerState.solveStart) / 1000;
       metricsData.recordResult("solver", {
         time: solveTime,
+        backtracks: backtrackCount,
         ...metrics,
       });
 

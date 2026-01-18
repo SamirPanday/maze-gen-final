@@ -61,6 +61,7 @@ window.benchmarkSuite = {
       if (window.solverInterval) clearInterval(window.solverInterval);
       window.mazeState.generated = false;
       window.solveState.solving = false;
+      window.solveState.started = false; // Track if solver has started
 
       // Timeout Safety (60 seconds max per operation)
       const timeout = new Promise((_, reject) =>
@@ -84,15 +85,27 @@ window.benchmarkSuite = {
         await new Promise((r) => setTimeout(r, 100));
 
         // Step 2: Solve Maze
+        window.solveState.started = false;
         solver.func();
 
+        // Wait for solver to START first (fixes race condition at normal speed)
+        await new Promise((r) => {
+          const checkStart = setInterval(() => {
+            if (solveState.started || solveState.solving) {
+              clearInterval(checkStart);
+              r();
+            }
+          }, 10); // Check frequently to catch the start
+        });
+
+        // Now wait for solver to FINISH
         await new Promise((r) => {
           const checkSolve = setInterval(() => {
             if (!solveState.solving) {
               clearInterval(checkSolve);
               r();
             }
-          }, 100);
+          }, 50); // Can check less frequently now
         });
 
         resolveExec();

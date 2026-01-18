@@ -31,6 +31,7 @@ window.metricsData = {
       algorithm: this.currentAlgorithm,
       type: type, // 'generator' or 'solver'
       timestamp: new Date().toISOString(),
+      mazeSize: `${rows}x${cols}`,
       ...data,
     };
     this.results.push(result);
@@ -45,10 +46,14 @@ window.metricsData = {
     if (result.time) console.log(`Time: ${result.time.toFixed(3)} seconds`);
     if (result.pathLength)
       console.log(`Path Length: ${result.pathLength} cells`);
+    if (result.backtracks !== undefined)
+      console.log(`Backtracks: ${result.backtracks}`);
     if (result.deadEnds !== undefined)
       console.log(`Dead Ends: ${result.deadEnds}`);
     if (result.junctions !== undefined)
       console.log(`Junctions: ${result.junctions}`);
+    if (result.corridorLength !== undefined)
+      console.log(`Avg Corridor Length: ${result.corridorLength.toFixed(2)}`);
     if (result.manhattanEfficiency !== undefined)
       console.log(`Manhattan Eff.: ${result.manhattanEfficiency.toFixed(2)}x`);
     if (result.cellsExplored)
@@ -64,6 +69,137 @@ window.metricsData = {
     console.log(JSON.stringify(this.results, null, 2));
     console.table(this.results);
     return this.results;
+  },
+
+  // Download as CSV for spreadsheet analysis
+  exportAsCSV() {
+    if (this.results.length === 0) {
+      alert("No metrics data to export. Run some benchmarks first!");
+      return;
+    }
+    const headers = [
+      "algorithm",
+      "type",
+      "timestamp",
+      "mazeSize",
+      "time",
+      "pathLength",
+      "backtracks",
+      "cellsExplored",
+      "totalCells",
+      "efficiency",
+      "deadEnds",
+      "junctions",
+      "corridorLength",
+      "manhattanEfficiency",
+      "pathFound",
+    ];
+    const rows = this.results.map((r) =>
+      headers.map((h) => (r[h] !== undefined ? r[h] : "")).join(",")
+    );
+    const csv = [headers.join(","), ...rows].join("\n");
+    this.downloadFile(csv, "maze_metrics.csv", "text/csv");
+    console.log("✅ CSV exported successfully!");
+  },
+
+  // Download as JSON for programmatic processing
+  exportAsJSON() {
+    if (this.results.length === 0) {
+      alert("No metrics data to export. Run some benchmarks first!");
+      return;
+    }
+    const json = JSON.stringify(this.results, null, 2);
+    this.downloadFile(json, "maze_metrics.json", "application/json");
+    console.log("✅ JSON exported successfully!");
+  },
+
+  // Generate summary statistics grouped by algorithm
+  exportSummaryStats() {
+    if (this.results.length === 0) {
+      alert("No metrics data to export. Run some benchmarks first!");
+      return;
+    }
+
+    const grouped = {};
+    this.results.forEach((r) => {
+      const key = `${r.algorithm} (${r.type})`;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(r);
+    });
+
+    const summary = {};
+    for (const [algo, data] of Object.entries(grouped)) {
+      const times = data.map((d) => d.time).filter((t) => t !== undefined);
+      const paths = data
+        .map((d) => d.pathLength)
+        .filter((p) => p !== undefined);
+      const backtracks = data
+        .map((d) => d.backtracks)
+        .filter((b) => b !== undefined);
+
+      summary[algo] = {
+        trials: data.length,
+        avgTime:
+          times.length > 0
+            ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(4)
+            : "N/A",
+        stdDevTime: times.length > 1 ? this.stdDev(times).toFixed(4) : "N/A",
+        avgPathLength:
+          paths.length > 0
+            ? (paths.reduce((a, b) => a + b, 0) / paths.length).toFixed(1)
+            : "N/A",
+        avgBacktracks:
+          backtracks.length > 0
+            ? (
+                backtracks.reduce((a, b) => a + b, 0) / backtracks.length
+              ).toFixed(1)
+            : "N/A",
+      };
+    }
+
+    console.log("\n📈 SUMMARY STATISTICS:");
+    console.table(summary);
+
+    // Also download as CSV
+    const headers = [
+      "Algorithm",
+      "Trials",
+      "Avg Time (s)",
+      "Std Dev Time",
+      "Avg Path Length",
+      "Avg Backtracks",
+    ];
+    const rows = Object.entries(summary).map(([algo, stats]) =>
+      [
+        algo,
+        stats.trials,
+        stats.avgTime,
+        stats.stdDevTime,
+        stats.avgPathLength,
+        stats.avgBacktracks,
+      ].join(",")
+    );
+    const csv = [headers.join(","), ...rows].join("\n");
+    this.downloadFile(csv, "maze_summary_stats.csv", "text/csv");
+    console.log("✅ Summary stats exported!");
+  },
+
+  stdDev(arr) {
+    const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+    const squareDiffs = arr.map((v) => Math.pow(v - mean, 2));
+    return Math.sqrt(squareDiffs.reduce((a, b) => a + b, 0) / arr.length);
+  },
+
+  downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   },
 
   clear() {
@@ -112,6 +248,8 @@ function calculateMetrics() {
 function calculateAdvancedMetrics() {
   let deadEnds = 0;
   let junctions = 0;
+  let corridorCells = 0;
+  let totalCorridorRuns = 0;
 
   for (let cell of grid) {
     let wallsCount = 0;
@@ -123,7 +261,23 @@ function calculateAdvancedMetrics() {
     if (wallsCount === 3) deadEnds++;
     // Junctions: 0 or 1 wall (3 or 4 exits)
     if (wallsCount <= 1) junctions++;
+
+    // Corridor cell: exactly 2 walls forming a straight passage
+    if (wallsCount === 2) {
+      // Check if opposite walls (forms straight corridor)
+      if (
+        (cell.walls.top && cell.walls.bottom) ||
+        (cell.walls.left && cell.walls.right)
+      ) {
+        corridorCells++;
+      }
+    }
   }
+
+  // Estimate average corridor length (straight cells per corridor segment)
+  // More corridor cells with fewer junctions = longer corridors
+  const corridorBreakers = deadEnds + junctions + 1; // +1 to avoid division by zero
+  const corridorLength = corridorCells / corridorBreakers;
 
   // Manhattan efficiency
   let start = grid[0];
@@ -134,6 +288,7 @@ function calculateAdvancedMetrics() {
   return {
     deadEnds,
     junctions,
+    corridorLength,
     manhattanEfficiency,
   };
 }

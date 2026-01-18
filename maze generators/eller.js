@@ -1,5 +1,6 @@
 const eller = () => {
   console.log("Eller's Algorithm");
+  metricsData.startTracking("Eller's Algorithm");
   timerState.startGen();
 
   mazeState.generated = false;

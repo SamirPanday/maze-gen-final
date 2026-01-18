@@ -9,6 +9,7 @@ const dijkstra = (start = grid[0], end = grid[grid.length - 1]) => {
   metricsData.startTracking("Dijkstra");
   timerState.startSolve();
   solveState.solving = true;
+  solveState.started = true; // Signal that solver has started
 
   // console.log("Start cell:", start);
   // console.log("End cell:", end);

@@ -34,7 +34,9 @@
     </div>
     </div>
     <div class="metrics-container">
-      <button class="export-metrics-btn" onclick="metricsData.exportForReport()">📊 Export Metrics</button>
+      <button class="export-metrics-btn" onclick="metricsData.exportAsCSV()" style="background-color: #4CAF50; color: white;">📊 Export CSV</button>
+      <button class="export-metrics-btn" onclick="metricsData.exportAsJSON()" style="background-color: #2196F3; color: white;">📋 Export JSON</button>
+      <button class="export-metrics-btn" onclick="metricsData.exportSummaryStats()" style="background-color: #9C27B0; color: white;">📈 Summary Stats</button>
       <button class="clear-metrics-btn" onclick="metricsData.clear()">🗑️ Clear Metrics</button>
       <button class="benchmark-btn" onclick="benchmarkSuite.run()" style="background-color: #ff5722; color: white;">🚀 Run Benchmark Suite</button>
       <label style="color: white; margin-left: 10px;">
