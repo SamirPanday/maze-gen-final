@@ -1,8 +1,10 @@
 // Grid Size Options (change cell_size, refresh page):
+// cell_size = 120 → 5×5 (Extra Small)
 // cell_size = 60 → 10×10 (Small)
 // cell_size = 30 → 20×20 (Medium)
 // cell_size = 20 → 30×30 (Large)
-let cell_size = 20; // Default: Medium (20×20)
+// cell_size = 15 → 40×40 (Extra Large)
+let cell_size = 15;
 let mazeSpeed = 50; // Default animation speed
 const framewidth = 600;
 const frameheight = 600;
@@ -99,7 +101,7 @@ window.metricsData = {
       "pathFound",
     ];
     const rows = this.results.map((r) =>
-      headers.map((h) => (r[h] !== undefined ? r[h] : "")).join(",")
+      headers.map((h) => (r[h] !== undefined ? r[h] : "")).join(","),
     );
     const csv = [headers.join(","), ...rows].join("\n");
     this.downloadFile(csv, "maze_metrics.csv", "text/csv");
@@ -181,7 +183,7 @@ window.metricsData = {
         stats.stdDevTime,
         stats.avgPathLength,
         stats.avgBacktracks,
-      ].join(",")
+      ].join(","),
     );
     const csv = [headers.join(","), ...rows].join("\n");
     this.downloadFile(csv, "maze_summary_stats.csv", "text/csv");
@@ -331,6 +333,10 @@ function setup() {
     .addEventListener("click", () => dijkstra());
 
   document
+    .querySelector(".a-star-btn")
+    .addEventListener("click", () => aStar());
+
+  document
     .querySelector(".wilson-btn")
     .addEventListener("click", () => wilson());
 }
@@ -381,7 +387,7 @@ function cell(i, j) {
         this.j * cell_size,
         this.i * cell_size,
         this.j * cell_size + cell_size,
-        this.i * cell_size
+        this.i * cell_size,
       ); // top
     }
     if (this.walls.right) {
@@ -390,7 +396,7 @@ function cell(i, j) {
         this.j * cell_size + cell_size,
         this.i * cell_size,
         this.j * cell_size + cell_size,
-        this.i * cell_size + cell_size
+        this.i * cell_size + cell_size,
       ); // right
     }
     if (this.walls.bottom) {
@@ -399,7 +405,7 @@ function cell(i, j) {
         this.j * cell_size,
         this.i * cell_size + cell_size,
         this.j * cell_size + cell_size,
-        this.i * cell_size + cell_size
+        this.i * cell_size + cell_size,
       ); // bottom
     }
     if (this.walls.left) {
@@ -408,7 +414,7 @@ function cell(i, j) {
         this.j * cell_size,
         this.i * cell_size,
         this.j * cell_size,
-        this.i * cell_size + cell_size
+        this.i * cell_size + cell_size,
       ); // left
     }
 
