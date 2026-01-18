@@ -1,12 +1,9 @@
-// Benchmark Suite
-// Automates running all generators and solvers to collect data
-
 window.benchmarkSuite = {
   isRunning: false,
   results: [],
   config: {
     trials: 5,
-    speed: 0, // Fast mode
+    speed: 0,
     generators: [
       { name: "Recursive Backtracking", func: recursiveBacktracking },
       { name: "Randomized Kruskal", func: randomizedKruskal },
@@ -18,39 +15,38 @@ window.benchmarkSuite = {
       { name: "Recursive DFS", func: recursiveDFS },
       { name: "Wall Follower", func: wallFollower },
       { name: "Dijkstra", func: dijkstra },
+      { name: "A* Search", func: aStar }, // UPDATED: Matches Python script name
     ],
   },
 
   async run() {
     if (this.isRunning) return;
     this.isRunning = true;
-    this.results = [];
+
+    // 1. Save original speed and set to instant
+    const originalSpeed = window.mazeSpeed;
+    window.mazeSpeed = this.config.speed;
 
     console.log("🚀 Starting Benchmark Suite...");
-    const originalSpeed = mazeSpeed;
-    // Don't override speed if user wants to use checkbox value
-    // mazeSpeed = this.config.speed;
 
     try {
       for (const generator of this.config.generators) {
         for (const solver of this.config.solvers) {
           console.log(`\nTesting: ${generator.name} + ${solver.name}`);
-
           for (let i = 0; i < this.config.trials; i++) {
-            console.log(`  Trial ${i + 1}/${this.config.trials}`);
             await this.runTrial(generator, solver);
           }
         }
       }
 
       console.log("✅ Benchmark Complete!");
-      metricsData.exportForReport();
-      alert("Benchmark Complete! Check console for data.");
+      metricsData.exportForReport(); // Trigger the JSON download
+      alert("Benchmark Complete! Check your downloads folder.");
     } catch (e) {
       console.error("Benchmark Failed:", e);
     } finally {
       this.isRunning = false;
-      mazeSpeed = originalSpeed; // Restore speed
+      window.mazeSpeed = originalSpeed; // Restore UI speed
     }
   },
 
@@ -59,54 +55,31 @@ window.benchmarkSuite = {
       // Step 0: Force Cleanup
       if (window.currentInterval) clearInterval(window.currentInterval);
       if (window.solverInterval) clearInterval(window.solverInterval);
+
       window.mazeState.generated = false;
       window.solveState.solving = false;
-      window.solveState.started = false; // Track if solver has started
+      window.solveState.started = false;
 
-      // Timeout Safety (60 seconds max per operation)
+      // Timeout Safety (300 seconds / 5 mins max per operation)
       const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject("Timeout"), 60000)
+        setTimeout(() => reject("Timeout after 300s"), 300000),
       );
 
       const execution = new Promise(async (resolveExec) => {
-        // Step 1: Generate Maze
+        // Step 1: Generate
         generator.func();
+        await this.waitForCondition(() => window.mazeState.generated, 100);
 
-        await new Promise((r) => {
-          const checkGen = setInterval(() => {
-            if (mazeState.generated) {
-              clearInterval(checkGen);
-              r();
-            }
-          }, 100);
-        });
-
-        // Wait a tick
-        await new Promise((r) => setTimeout(r, 100));
-
-        // Step 2: Solve Maze
-        window.solveState.started = false;
+        // Step 2: Solve
+        await new Promise((r) => setTimeout(r, 50)); // Tiny breather
         solver.func();
 
-        // Wait for solver to START first (fixes race condition at normal speed)
-        await new Promise((r) => {
-          const checkStart = setInterval(() => {
-            if (solveState.started || solveState.solving) {
-              clearInterval(checkStart);
-              r();
-            }
-          }, 10); // Check frequently to catch the start
-        });
-
-        // Now wait for solver to FINISH
-        await new Promise((r) => {
-          const checkSolve = setInterval(() => {
-            if (!solveState.solving) {
-              clearInterval(checkSolve);
-              r();
-            }
-          }, 50); // Can check less frequently now
-        });
+        // Wait for Start then Finish
+        await this.waitForCondition(
+          () => window.solveState.started || window.solveState.solving,
+          10,
+        );
+        await this.waitForCondition(() => !window.solveState.solving, 50);
 
         resolveExec();
       });
@@ -115,11 +88,20 @@ window.benchmarkSuite = {
         .then(resolve)
         .catch((e) => {
           console.warn(`Trial Skipped: ${e}`);
-          // Force cleanup again
-          if (window.currentInterval) clearInterval(window.currentInterval);
-          if (window.solverInterval) clearInterval(window.solverInterval);
-          resolve(); // Continue to next trial anyway
+          resolve();
         });
+    });
+  },
+
+  // Helper to keep code clean
+  waitForCondition(conditionFn, interval) {
+    return new Promise((resolve) => {
+      const checker = setInterval(() => {
+        if (conditionFn()) {
+          clearInterval(checker);
+          resolve();
+        }
+      }, interval);
     });
   },
 };
