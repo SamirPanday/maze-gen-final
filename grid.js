@@ -1,7 +1,11 @@
-let cell_size = 25;
+// Grid Size Options (change cell_size, refresh page):
+// cell_size = 60 → 10×10 (Small)
+// cell_size = 30 → 20×20 (Medium)
+// cell_size = 20 → 30×30 (Large)
+let cell_size = 20; // Default: Medium (20×20)
 let mazeSpeed = 50; // Default animation speed
-const framewidth = 500;
-const frameheight = 500;
+const framewidth = 600;
+const frameheight = 600;
 const rows = Math.floor(frameheight / cell_size);
 const cols = Math.floor(framewidth / cell_size);
 let grid = [];
